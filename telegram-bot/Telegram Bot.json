@@ -1,0 +1,284 @@
+{
+  "name": "Telegram Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4072b55f-e0c8-4282-9a9a-9da0fda6edfc",
+      "name": "Telegram Trigger",
+      "webhookId": "b16d14be-cecb-4e82-8964-c454dd880858",
+      "credentials": {
+        "telegramApi": {
+          "id": "eERPR5aI26kFbM80",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "You are replying inside a Telegram chat. Do not use Markdown formatting like **bold**, ### headers, or bullet symbols like * and -. Write in plain, natural sentences and short paragraphs instead. End your reply with exactly one relevant emoji, and use no emojis anywhere else in the message."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "12004d86-f6cd-4760-acea-44ca77f86d6e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        208
+      ],
+      "id": "6f901442-de0d-4fbc-aa1e-fadd82d5f7e3",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.chat.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        240,
+        208
+      ],
+      "id": "ebaa305d-aefa-46a3-a793-9729127e6965",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "replyMarkup": "=",
+        "forceReply": {},
+        "replyKeyboardOptions": {},
+        "replyKeyboardRemove": {},
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        576,
+        112
+      ],
+      "id": "58c0b718-964d-4edf-b638-5e1afdf0a4b3",
+      "name": "Send a text message",
+      "webhookId": "3bda9597-7af4-41b1-be70-06e6fdbb22a5",
+      "credentials": {
+        "telegramApi": {
+          "id": "eERPR5aI26kFbM80",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Fetches a fresh, random joke. Use this whenever the user asks for a joke or something funny. When you use the joke tool, you MUST reply with the exact joke text returned by the tool. Do not paraphrase, modify, or replace it with a joke from your own knowledge. If the tool call fails or returns no result, tell the user you couldn't fetch a joke right now instead of making one up.",
+        "url": "https://api.chucknorris.io/jokes/random",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        384,
+        208
+      ],
+      "id": "146cfe69-5ec9-4a1c-8d62-7493439c8dae",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "15xkeUxwWpe2p1KlsQNZ3ElNKFmhY8Wd-cTSTkXtSOmw",
+          "mode": "list",
+          "cachedResultName": "Telegram chat data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15xkeUxwWpe2p1KlsQNZ3ElNKFmhY8Wd-cTSTkXtSOmw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15xkeUxwWpe2p1KlsQNZ3ElNKFmhY8Wd-cTSTkXtSOmw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now }}",
+            "User": "={{ $('Telegram Trigger').item.json.message.from.first_name }}",
+            "Question": "={{ $('Telegram Trigger').item.json.message.text }}",
+            "Answer": "={{ $('AI Agent').item.json.output }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "User",
+              "displayName": "User",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Question",
+              "displayName": "Question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Answer",
+              "displayName": "Answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        608,
+        -96
+      ],
+      "id": "81ff66db-2dd6-4028-b662-3898132772bf",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "mVAq2hcSKd9a1Tj0",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "DMjhiHJKbHYfxcGW",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "1ff825bb-8e53-4632-9542-b76c570c5fc4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5a767bf3b5eb7c8309acf0bde7ef27ab19a2881a9d88dffbfa0823e5d7f6b1a8"
+  },
+  "nodeGroups": [],
+  "id": "mzIhji6NVctWdxAR",
+  "tags": []
+}

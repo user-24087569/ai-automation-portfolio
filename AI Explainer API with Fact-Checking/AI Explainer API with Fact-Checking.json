@@ -1,0 +1,281 @@
+{
+  "name": "AI Explainer API with Fact-Checking",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Explain what {{ $json.query.topic }} is, in one sentence, for a 10 year old.",
+        "options": {
+          "systemMessage": "You are a helpful assistant. For questions involving specific numbers or facts, use the Wikipedia tool once to check your answer. If the search doesn't return a clear match, give your best answer based on what you found. If you are not fully confident in the accuracy of your answer, add a short note at the end saying this is an approximate answer and the user should verify with another source."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        672,
+        0
+      ],
+      "id": "caf54335-2484-4c22-928c-a0146678184d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        208
+      ],
+      "id": "c1694b50-0877-459d-b8dd-f3fd0d49e814",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "454f23a9-341a-4ef3-aef6-f9bfc88b7e23",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "72db23da-1b0e-48ff-b36e-4e3bce4177fb",
+      "name": "Webhook",
+      "webhookId": "454f23a9-341a-4ef3-aef6-f9bfc88b7e23"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "b5a3d3f3-3c0e-4df9-a04c-393f08eebfab",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3fcff9e2-0a83-4697-8e15-290c8fe12868",
+              "leftValue": "={{ ($json.query.topic || '').trim() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "9a5ddaaf-c33b-4ad1-b5a6-99a83a5a52e1",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Please provide a topic to learn about. Example: ?topic=python",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        656,
+        224
+      ],
+      "id": "f4c76690-2db5-432b-9fce-404e8bc2a3c5",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolWikipedia",
+      "typeVersion": 1,
+      "position": [
+        832,
+        208
+      ],
+      "id": "09593177-4cb9-49db-bb82-e6d138f5675a",
+      "name": "Wikipedia"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "336afaf8-f585-4c61-ac67-505a26a288e6",
+              "leftValue": "={{ $json.query.key }}",
+              "rightValue": "test@123",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "9302bcd7-dd63-4543-9390-648c8c33d75f",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Unauthorised Access Please Enter Secuirity Key",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        496,
+        144
+      ],
+      "id": "7f7986dc-b45e-4abd-9f40-48c23c967a2b",
+      "name": "Respond to Webhook2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wikipedia": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "d048c1a4-ecfc-45c0-b508-e0e6ba20ba93",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5a767bf3b5eb7c8309acf0bde7ef27ab19a2881a9d88dffbfa0823e5d7f6b1a8"
+  },
+  "nodeGroups": [],
+  "id": "95JsPNHucQIvJbZA",
+  "tags": []
+}
